@@ -1,0 +1,50 @@
+main > .container {
+    /* padding: 60px 15px 0; */
+    padding: 0 15px 0;
+    /* min-height: calc(); 100vh - Needs to be navbarheight - 39*/ 
+}
+
+
+html, body{
+    overflow-x: hidden;
+}
+
+
+*{
+    font-family: sans-serif;
+}
+
+/* Titles for each page */
+.title{ 
+    text-transform: uppercase;
+    font-weight: bolder;
+    text-align: center;
+    color: #fff;
+}
+.title-container{
+    background-color: #474B8E;
+    padding: 50px;
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 25px;
+}
+
+/* Home */
+.button-container{
+    display: flex;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+@media only screen and (max-width: 450px) {
+    .button-container{
+        flex-direction: column;
+    }
+    .button-text{
+        font-size: 30px;
+    }
+}
