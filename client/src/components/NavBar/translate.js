@@ -1,49 +1,76 @@
 import { useEffect } from "react";
-//google translate button script 
+import { db } from "../../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-//translate function component
 const Translate = () => {
-
-  //sets the initialization to create a new translate widget 
-  const googleTranslateElementInit = () => {
-    new window.google.translate.TranslateElement(
-      {
-        pageLanguage: "en",
-        autoDisplay: false,
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        includedLanguages: "en,ar,zh-TW,fr,es,zh-CN,tl,ta,ur,pt-PT",
-      },
-      "google_translate_element"
-    );
+  // Function to log to Firestore
+  const logToFirebase = async (event, data = {}) => {
+    try {
+      await addDoc(collection(db, "translateLogs"), {
+        event,
+        timestamp: serverTimestamp(),
+        ...data,
+      });
+    } catch (err) {
+      console.error("Error logging to Firebase:", err);
+    }
   };
 
+  const googleTranslateElementInit = () => {
+    try {
+      //logToFirebase("googleTranslateElementInit called");
+
+      new window.google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          autoDisplay: false,
+        },
+        "google_translate_element"
+      );
+
+      // Poll for the dropdown to appear
+      const interval = setInterval(() => {
+       // logToFirebase("Polling for language dropdown...");
+
+        const selectElement = document.querySelector(".goog-te-combo");
+        if (selectElement) {
+        //  logToFirebase("Language dropdown detected");
+
+          clearInterval(interval);
+
+          selectElement.addEventListener("change", () => {
+            logToFirebase("Language changed", { selectedLanguage: selectElement.value });
+          });
+        }
+      }, 500);
+    } catch (err) {
+     // logToFirebase("Error in googleTranslateElementInit", { error: err.toString() });
+      console.error("Error in googleTranslateElementInit", err);
+    }
+  };
 
   useEffect(() => {
-    // check if script exists & is already initialized
-    const isInitialized = document.querySelector('script[src*="translate_a/element.js"]');
-    const existingGoogleScript = document.querySelector('script[src*="translate.googleapis.com"]');
+   // logToFirebase("useEffect triggered");
 
-    if (!(isInitialized && existingGoogleScript)) {
-      window.googleTranslateElementInit = googleTranslateElementInit;
+    // Define global callback before adding the script
+    window.googleTranslateElementInit = googleTranslateElementInit;
 
-      //adds onto the script
+    // Check if script is already added
+    if (!document.querySelector('script[src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"]')) {
       const addScript = document.createElement("script");
-      console.log("loaded");
-      addScript.setAttribute(
-        "src",
-        "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-      );
-      addScript.async = true; 
+      addScript.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      addScript.async = true;
+     // logToFirebase("Adding Google Translate script");
       document.body.appendChild(addScript);
-      return () => {
-        document.body.removeChild(addScript);
-      };
+    } else {
+      // Script already loaded, just call init manually
+      googleTranslateElementInit();
     }
+
+    // Do NOT remove the script on unmount to avoid issues
   }, []);
 
-  return (
-    <div id="google_translate_element"></div>
-  );
+  return <div id="google_translate_element"></div>;
 };
 
 export default Translate;
