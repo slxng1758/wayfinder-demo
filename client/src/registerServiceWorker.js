@@ -1,5 +1,4 @@
 // In production, we register a service worker to serve assets from local cache.
-
 // This lets the app load faster on subsequent visits in production, and gives
 // it offline capabilities. However, it also means that developers (and users)
 // will only see deployed updates on the "N+1" visit to a page, since previously
@@ -106,3 +105,55 @@ export function unregister() {
     });
   }
 }
+
+// Service Worker Caching Logic
+
+self.addEventListener('install', (event) => {
+  // Cache essential resources on installation
+  event.waitUntil(
+    caches.open('my-cache').then((cache) => {
+      return cache.addAll([
+        '/', // Main page
+        '/index.html',
+        '/static/js/main.js',
+        '/static/css/main.css',
+        '/assets/landing-image.png', // Add other essential assets here
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  // For dynamic content, use network-first (ignore fragments like #)
+  if (requestUrl.pathname.includes('/birchmount/')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request)) // Try to fetch, fall back to cache
+    );
+  } else {
+    // For static resources, use cache-first strategy
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || fetch(event.request); // Cache-then-fetch for other routes
+      })
+    );
+  }
+});
+
+// Activate the service worker and clean up old caches
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = ['my-cache']; // Ensure only the latest cache is active
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            return caches.delete(cacheName); // Delete old caches
+          }
+        })
+      );
+    })
+  );
+});

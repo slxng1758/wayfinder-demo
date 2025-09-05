@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Analytics } from "@vercel/analytics/react"
 
 import { BrowserRouter, Routes, Route, useParams, Outlet } from 'react-router-dom';
 
@@ -15,13 +14,9 @@ import NotFound from './components/NotFound';
 import './App.css';
 import NavBar from './components/NavBar/NavBar';
 
-import { ThemeProvider } from '@mui/material/styles';
-import theme from './styles/theme';
-
 // Import hospital site specific data
 import { birchmountData } from './data/birchmountData';
 import { centenaryData } from './data/centenaryData';
-// import { generalData } from './data/generalData';
 
 const hospitalData = {
   birchmount: birchmountData,
@@ -44,9 +39,9 @@ const HospitalSite = () => {
     case 'faqs':
       return <Faqs data={data.faqs} />;
     case 'directory':
-      return <Directory data={data.directory} site={site} />;
+      return <Directory data={data.directory} />;
     case 'map':
-      return <Map data={data.map} site={site}/>;
+      return <Map data={data.map} />;
     case 'feedback':
       return <Feedback data={data.feedback} />;
     default:
@@ -54,11 +49,11 @@ const HospitalSite = () => {
   }
 };
 
-const PageLayout = ({displayNavBar}) => {
+const PageLayout = ({ displayNavBar }) => {
   const { site } = useParams();
   return (
     <div>
-      <NavBar hospitalSite={site} displayNavBar={displayNavBar}/>
+      <NavBar hospitalSite={site} displayNavBar={displayNavBar} />
       <main className="flex-shrink-0">
         <div className="container">
           <Outlet />
@@ -69,28 +64,41 @@ const PageLayout = ({displayNavBar}) => {
 };
 
 class App extends Component {
+  componentDidMount() {
+    // Log language to console
+    const userLanguage = navigator.language || navigator.languages[0];
+    console.log("Browser's preferred language:", userLanguage);
+
+    // Fire-and-forget
+    fetch('/api/log-language', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        language: userLanguage,
+      }),
+    }).catch((error) => {
+      console.error('Error logging language:', error); 
+    });
+  }
+
   render() {
     return (
-      <ThemeProvider theme={theme}>
-
-        <BrowserRouter>
-          <Analytics />
-
-          <Routes>
-            <Route exact path="/" element={<PageLayout displayNavBar={false}/>}>
-              <Route path="" element={<Landing images={images}/>} />
-            </Route>
-            <Route path="/:site" element={<PageLayout displayNavBar={true}/>}>
-              <Route exact path="/:site" element={<HospitalSite/>} />
-              <Route path="/:site/:page" element={<HospitalSite/>} />
-              <Route path="*" element={<NotFound/>} />
-            </Route>
-          </Routes>
-          <Footer/>
-        </BrowserRouter>
-
-      </ThemeProvider>
-    )
+      <BrowserRouter>
+        <Routes>
+          <Route exact path="/" element={<PageLayout displayNavBar={false} />}>
+            <Route path="" element={<Landing images={images} />} />
+          </Route>
+          <Route path="/:site" element={<PageLayout displayNavBar={true} />}>
+            <Route exact path="/:site" element={<HospitalSite />} />
+            <Route path="/:site/:page" element={<HospitalSite />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+        <Footer />
+      </BrowserRouter>
+    );
   }
 }
 

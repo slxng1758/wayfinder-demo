@@ -1,35 +1,60 @@
-
 /**
- * Module dependencies.
+ * Backend server for wayfinder-demo
  */
 
-var express = require('express')
-  , http = require('http')
-  , path = require('path')
-  , bodyParser = require('body-parser')
-  , favicon = require('serve-favicon')
-  , logger = require('morgan')
-  , methodOverride = require('method-override');
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const bodyParser = require('body-parser');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const methodOverride = require('method-override');
 
-var app = express();
+const app = express();
 
-app.set('port', process.env.PORT || 3000);
-app.use(favicon(__dirname + '/public/images/favicon.png'));
+// Port
+const PORT = process.env.PORT || 3000;
+app.set('port', PORT);
+
+// Middleware
+try {
+  app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.png')));
+} catch (err) {
+  console.warn('⚠️ No favicon found at public/images/favicon.png (optional)');
+}
+
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); // parse JSON request bodies
 app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'client/build')));
 
-if (app.get('env') == 'development') {
+// Serve static React build
+const buildPath = path.join(__dirname, 'client', 'build');
+app.use(express.static(buildPath));
+
+// Example API route (add your backend endpoints here)
+app.post('/api/log-language', (req, res) => {
+  const { language } = req.body;
+  console.log('🌐 Logged language:', language);
+  res.sendStatus(200);
+});
+
+// Development settings
+if (app.get('env') === 'development') {
   app.locals.pretty = true;
 }
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+// ✅ Catch-all route for React Router (works with Express v5)
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+    if (err) {
+      console.error('Error sending index.html:', err);
+      res.status(500).send(err);
+    }
+  });
 });
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
+// Create HTTP server
+http.createServer(app).listen(PORT, () => {
+  console.log(`Express server listening on port ${PORT}`);
 });

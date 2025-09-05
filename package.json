@@ -1,6 +1,10 @@
 {
+  
   "name": "nodebootstraper",
   "version": "5.0.0",
+  "start": "craco start",
+  "build": "craco build",
+  "test": "craco test",
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
@@ -9,6 +13,7 @@
     "@vercel/analytics": "^1.4.1",
     "body-parser": "^2.0.2",
     "express": "^5.0.1",
+    "firebase": "^12.2.1",
     "method-override": "*",
     "morgan": "*",
     "pug": "*",
@@ -27,4 +32,6 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
+  
+
 }
